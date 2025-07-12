@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stake Code Farmer with VPS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /*=============== THEME & COLOR VARIABLES ===============*/
+        :root {
+          /* Light Theme */
+          --primary-color-light: #007BFF;
+          --primary-color-dark-light: #0056b3;
+          --primary-gradient-light: linear-gradient(45deg, #007BFF, #0056b3);
+          --background-color-light: #F8F9FA;
+          --surface-color-light: #FFFFFF;
+          --text-color-light-theme: #212529;
+          --text-color-light-light: #6C757D;
+          --border-color-light: #DEE2E6;
+          --header-bg-light: rgba(248, 249, 250, 0.8);
+
+          /* Dark Theme (Default) */
+          --primary-color-dark: #00e676; /* Matrix Green */
+          --primary-color-dark-dark: #00c853;
+          --primary-gradient-dark: linear-gradient(45deg, #00e676, #00c853);
+          --background-color-dark: #000000;
+          --surface-color-dark: rgba(30, 30, 30, 0.9); /* Semi-transparent surface */
+          --text-color-dark-theme: #E0E0E0;
+          --text-color-light-dark: #A0A0A0;
+          --border-color-dark: #222;
+          --header-bg-dark: rgba(18, 18, 18, 0.85);
+          
+          --font-family: 'Inter', sans-serif;
+        }
+
+        /* Apply theme variables */
+        html[data-theme='light'] {
+            --primary-color: var(--primary-color-light);
+            --primary-color-dark: var(--primary-color-dark-light);
+            --primary-gradient: var(--primary-gradient-light);
+            --background-color: var(--background-color-light);
+            --surface-color: var(--surface-color-light);
+            --text-color: var(--text-color-light-theme);
+            --text-color-light: var(--text-color-light-light);
+            --border-color: var(--border-color-light);
+            --header-bg: var(--header-bg-light);
+        }
+
+        html[data-theme='dark'] {
+            --primary-color: var(--primary-color-dark);
+            --primary-color-dark: var(--primary-color-dark-dark);
+            --primary-gradient: var(--primary-gradient-dark);
+            --background-color: var(--background-color-dark);
+            --surface-color: var(--surface-color-dark);
+            --text-color: var(--text-color-dark-theme);
+            --text-color-light: var(--text-color-light-dark);
+            --border-color: var(--border-color-dark);
+            --header-bg: var(--header-bg-dark);
+        }
+
+        /*=============== BASE ===============*/
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          font-family: var(--font-family);
+          background-color: var(--background-color);
+          color: var(--text-color);
+          line-height: 1.6;
+          transition: background-color 0.3s, color 0.3s;
+        }
+        
+        h1, h2, h3 {
+          color: var(--text-color);
+          font-weight: 600;
+        }
+
+        ul { list-style: none; }
+        a { text-decoration: none; color: var(--primary-color); }
+        .container { max-width: 1100px; margin: auto; padding: 0 1.5rem; }
+
+        .section {
+          padding: 8rem 0 4rem;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          position: relative;
+          z-index: 2; /* Ensure section content is above the matrix canvas */
+        }
+
+        .section__title {
+          font-size: 2.5rem;
+          text-align: center;
+          margin-bottom: 1rem;
+        }
+        
+        .section__subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-color-light);
+            margin-bottom: 4rem;
+        }
+        
+        /*=============== MATRIX BACKGROUND ===============*/
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind content, in front of body bg */
+            display: none; /* Hidden by default */
+        }
+        
+        html[data-theme="dark"] #matrix-canvas {
+            display: block; /* Shown only in dark mode */
+        }
+
+
+        /*=============== HEADER & NAV ===============*/
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: var(--header-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .nav {
+            height: 5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav__logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .nav__logo span { color: var(--primary-color); }
+
+        .nav__menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .nav__list {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav__link {
+            font-weight: 600;
+            color: var(--text-color-light);
+            transition: color 0.3s;
+        }
+
+        .nav__link:hover, .nav__link.active {
+            color: var(--primary-color);
+        }
+
+        .theme-toggle {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color-light);
+            transition: color 0.3s;
+        }
+        .theme-toggle:hover { color: var(--primary-color); }
+        
+        .nav__toggle {
+            font-size: 1.8rem;
+            cursor: pointer;
+            display: none; /* Hidden on desktop */
+        }
+        
+        /*=============== BUTTONS ===============*/
+        .button {
+            display: inline-block;
+            padding: 0.9rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .button--primary {
+            background: var(--primary-gradient);
+            color: #000;
+        }
+        html[data-theme="light"] .button--primary {
+            color: #FFFFFF;
+        }
+
+        .button--primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 230, 118, 0.4);
+        }
+        html[data-theme="light"] .button--primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+        }
+        .button--outline {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .button--outline:hover {
+            background-color: var(--primary-color);
+            color: #000;
+        }
+        html[data-theme="light"] .button--outline:hover {
+             color: #FFFFFF;
+        }
+        .button--large {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        /*=============== HOME (HERO) SECTION ===============*/
+        #home {
+          text-align: center;
+          background: transparent; /* Let body background/canvas show */
+        }
+        
+        #home .container { max-width: 800px; }
+        .home__title {
+          font-size: 3.5rem;
+          margin-bottom: 1rem;
+          line-height: 1.2;
+        }
+        .home__subtitle {
+          font-size: 1.2rem;
+          color: var(--text-color-light);
+          margin-bottom: 2.5rem;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        /*=============== FEATURES SECTION ===============*/
+        .features__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        .feature__card {
+            background-color: var(--surface-color);
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, border-color 0.3s;
+        }
+        .feature__card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .feature__icon { font-size: 3rem; color: var(--primary-color); margin-bottom: 1.5rem; }
+        .feature__title { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .feature__description { color: var(--text-color-light); }
+
+        /*=============== PRICING & LICENSE SECTION ===============*/
+        .pricing__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+        .pricing__card {
+            background-color: var(--surface-color); padding: 2.5rem; border-radius: 12px; border: 1px solid var(--border-color);
+            text-align: center; position: relative; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, border-color 0.3s;
+        }
+        .pricing__card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); }
+        .pricing__card .button { margin-top: auto; }
+        .pricing__card.popular { border-color: var(--primary-color); transform: scale(1.05); z-index: 10; }
+        .popular__tag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: var(--primary-gradient); color: #000; padding: 0.5rem 2rem; font-size: 0.9rem; font-weight: 600; width: 100%; }
+        .pricing__plan { font-size: 1.5rem; margin-bottom: 1rem; margin-top: 1rem; }
+        .pricing__price { font-size: 3.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .pricing__month { font-size: 1rem; color: var(--text-color-light); font-weight: 400; }
+        .pricing__features { text-align: left; margin-bottom: 1rem; }
+        .pricing__features li { margin-bottom: 1rem; color: var(--text-color-light); display: flex; align-items: center; }
+        .pricing__features li::before { content: '✓'; color: var(--primary-color); font-weight: 700; margin-right: 0.5rem; }
+        .pricing__features li strong { color: var(--text-color); }
+        
+        /* Interactive Selection Styling */
+        .selection-title { text-align: left; font-weight: 600; margin-top: 1rem; margin-bottom: 0.75rem; }
+        .selection-list { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; list-style: none; margin-bottom: 1.5rem; }
+        .selection-item {
+            background-color: rgba(255,255,255,0.1); border: 1px solid var(--border-color); padding: 0.25rem 0.75rem;
+            border-radius: 15px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease-in-out;
+        }
+        html[data-theme="light"] .selection-item {
+            background-color: #e9ecef;
+        }
+        .selection-item:hover { border-color: var(--primary-color); }
+        .selection-item.selected { background: var(--primary-gradient); color: #000; border-color: var(--primary-color); font-weight: 600; }
+
+        /* License Card Specifics (reusing pricing card structure) */
+        .license-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        /*=============== GET STARTED SECTION ===============*/
+        .start__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; text-align: center; position: relative; }
+        .start__grid::before {
+            content: ''; position: absolute; top: 30px; left: 15%; right: 15%; height: 2px;
+            background: repeating-linear-gradient(90deg, var(--border-color), var(--border-color) 10px, transparent 10px, transparent 20px); z-index: -1;
+        }
+        .start__number {
+            width: 60px; height: 60px; border: 2px solid var(--primary-color); background-color: transparent;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; font-weight: 700; color: var(--primary-color); margin: 0 auto 1.5rem auto;
+            transition: background-color 0.3s;
+        }
+        .start__title { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .start__description { color: var(--text-color-light); }
+
+        /*=============== CTA & FOOTER ===============*/
+        .cta__section { background: var(--primary-gradient); padding: 5rem 1.5rem; margin-top: 4rem; text-align: center; border-radius: 16px; }
+        .cta__title { font-size: 2.5rem; color: #000; }
+        .cta__description { font-size: 1.1rem; color: rgba(0, 0, 0, 0.7); margin: 1rem 0 2.5rem 0; }
+        html[data-theme="light"] .cta__title { color: #FFFFFF; }
+        html[data-theme="light"] .cta__description { color: rgba(255, 255, 255, 0.8); }
+        .cta__section .button--primary { background: #000; color: var(--primary-color); }
+        html[data-theme="light"] .cta__section .button--primary { background: #FFFFFF; color: #007BFF; }
+        .cta__section .button--primary:hover { transform: scale(1.05); }
+        .footer { padding: 4rem 0 2rem 0; text-align: center; }
+        .footer__container { padding-top: 2rem; border-top: 1px solid var(--border-color); }
+        .footer__note { font-size: 0.9rem; color: var(--text-color-light); margin-top: 0.5rem; }
+
+        /*=============== RESPONSIVE DESIGN ===============*/
+        @media screen and (max-width: 992px) {
+            .nav__toggle { display: block; color: var(--text-color); }
+            .nav__menu {
+                position: fixed;
+                top: 5rem; /* Height of header */
+                right: -100%;
+                width: 60%;
+                height: calc(100vh - 5rem);
+                background-color: var(--background-color);
+                flex-direction: column;
+                justify-content: center;
+                gap: 3rem;
+                transition: right 0.4s;
+                border-left: 1px solid var(--border-color);
+            }
+            .nav__menu.show-menu { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
+            .nav__list { flex-direction: column; gap: 2rem; text-align: center; }
+            .pricing__grid, .start__grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .pricing__card.popular { transform: scale(1); }
+            .start__grid::before { display: none; }
+        }
+
+        @media screen and (max-width: 768px) {
+            .section { padding: 6rem 0 2rem; min-height: unset; }
+            #home { padding-top: 8rem; }
+            .home__title { font-size: 2.8rem; }
+            .section__title { font-size: 2.2rem; }
+            .cta__title { font-size: 2rem; }
+        }
+
+        @media screen and (max-width: 480px) {
+            .home__title { font-size: 2.2rem; }
+            .home__subtitle { font-size: 1rem; }
+            .pricing__card, .feature__card { padding: 2rem 1.5rem; }
+            .pricing__price { font-size: 2.8rem; }
+            .button { padding: 0.8rem 1.5rem; }
+            .button--large { padding: 0.9rem 2rem; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+
+    <!--=============== HEADER ===============-->
+    <header class="header">
+        <nav class="nav container">
+            <a href="#home" class="nav__logo">Stake Code <span>Farmer</span></a>
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <li><a href="#home" class="nav__link active">Home</a></li>
+                    <li><a href="#pricing" class="nav__link">VPS Plans</a></li>
+                    <li><a href="#license" class="nav__link">License</a></li>
+                    <li><a href="#start" class="nav__link">Get Started</a></li>
+                    <li><a href="#features" class="nav__link">Advantage</a></li>
+                </ul>
+            </div>
+            <div class="nav__actions">
+                 <i class='bx bx-moon theme-toggle' id="theme-button"></i>
+                 <i class='bx bx-menu nav__toggle' id="nav-toggle"></i>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!--=============== Stake Code Farmer (Home) ===============-->
+        <div id="home" class="section">
+            <div class="container">
+                <h1 class="home__title">Never Miss a Stake Drop Again.</h1>
+                <p class="home__subtitle">Get faster, safer, 24/7 code claims by pairing the Stake Code Farmer with a high-speed VPS. Fully automated.</p>
+                <a href="#pricing" class="button button--primary button--large">View Plans</a>
+            </div>
+        </div>
+        
+        <!--=============== Choose Your Bundle (Pricing) ===============-->
+        <div id="pricing" class="section">
+            <div class="container">
+                <h2 class="section__title">Choose Your VPS Plan</h2>
+                <p class="section__subtitle">High-performance servers to run your farmer 24/7. This is Step 1.</p>
+                <div class="pricing__grid">
+                    <!-- Basic Plan -->
+                    <div class="pricing__card" data-plan-name="Basic" data-cpu="1 Core" data-ram="2 GB" data-ssd="50 GB SSD">
+                        <h3 class="pricing__plan">Basic</h3>
+                        <div class="pricing__price">$5<span class="pricing__month">/mo</span></div>
+                        <ul class="pricing__features">
+                            <li><strong>1 Core</strong> CPU</li>
+                            <li><strong>2 GB</strong> RAM</li>
+                            <li><strong>50 GB</strong> SSD</li>
+                        </ul>
+                        <p class="selection-title"><strong>Operating System:</strong></p>
+                        <ul class="selection-list os-selector">
+                            <li class="selection-item" data-os="Windows">Windows</li>
+                            <li class="selection-item" data-os="Linux">Linux</li>
+                        </ul>
+                        <p class="selection-title"><strong>Location:</strong></p>
+                        <ul class="selection-list region-selector">
+                            <li class="selection-item" data-region="US">US</li>
+                            <li class="selection-item" data-region="CA">CA</li>
+                            <li class="selection-item" data-region="UK">UK</li>
+                            <li class="selection-item" data-region="DE">DE</li>
+                            <li class="selection-item" data-region="SG">SG</li>
+                            <li class="selection-item" data-region="INDIA">INDIA</li>
+                        </ul>
+                        <a href="#" target="_blank" class="button button--outline vps-order-button">Order Now</a>
+                    </div>
+                    <!-- Developer Plan -->
+                    <div class="pricing__card popular" data-plan-name="Developer" data-cpu="2 Cores" data-ram="4 GB" data-ssd="80 GB SSD">
+                        <div class="popular__tag">Most Popular</div>
+                        <h3 class="pricing__plan">Developer</h3>
+                        <div class="pricing__price">$8<span class="pricing__month">/mo</span></div>
+                        <ul class="pricing__features">
+                            <li><strong>2 Core</strong> CPU</li>
+                            <li><strong>4 GB</strong> RAM</li>
+                            <li><strong>80 GB</strong> SSD</li>
+                        </ul>
+                        <p class="selection-title"><strong>Operating System:</strong></p>
+                        <ul class="selection-list os-selector">
+                            <li class="selection-item" data-os="Windows Server 2012 R2">Windows Server 2012 R2</li>
+                        </ul>
+                        <p class="selection-title"><strong>Location:</strong></p>
+                        <ul class="selection-list region-selector">
+                            <li class="selection-item" data-region="US">US</li>
+                            <li class="selection-item" data-region="CA">CA</li>
+                            <li class="selection-item" data-region="UK">UK</li>
+                            <li class="selection-item" data-region="DE">DE</li>
+                            <li class="selection-item" data-region="SG">SG</li>
+                            <li class="selection-item" data-region="INDIA">INDIA</li>
+                            <li class="selection-item" data-region="JP">JP</li>
+                            <li class="selection-item" data-region="AU">AU</li>
+                        </ul>
+                        <a href="#" target="_blank" class="button button--primary vps-order-button">Order Now</a>
+                    </div>
+                    <!-- Business Plan -->
+                    <div class="pricing__card" data-plan-name="Business" data-cpu="4 Cores" data-ram="8 GB" data-ssd="160 GB SSD">
+                        <h3 class="pricing__plan">Business</h3>
+                        <div class="pricing__price">$12<span class="pricing__month">/mo</span></div>
+                        <ul class="pricing__features">
+                            <li><strong>4 Core</strong> CPU</li>
+                            <li><strong>8 GB</strong> RAM</li>
+                            <li><strong>160 GB</strong> SSD</li>
+                        </ul>
+                        <p class="selection-title"><strong>Operating System:</strong></p>
+                        <ul class="selection-list os-selector">
+                            <li class="selection-item" data-os="Windows">Windows</li>
+                            <li class="selection-item" data-os="Linux">Linux</li>
+                        </ul>
+                        <p class="selection-title"><strong>Location:</strong></p>
+                        <ul class="selection-list region-selector">
+                            <li class="selection-item" data-region="US">US</li>
+                            <li class="selection-item" data-region="CA">CA</li>
+                            <li class="selection-item" data-region="UK">UK</li>
+                            <li class="selection-item" data-region="DE">DE</li>
+                            <li class="selection-item" data-region="SG">SG</li>
+                            <li class="selection-item" data-region="INDIA">INDIA</li>
+                            <li class="selection-item" data-region="JP">JP</li>
+                            <li class="selection-item" data-region="AU">AU</li>
+                        </ul>
+                        <a href="#" target="_blank" class="button button--outline vps-order-button">Order Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--=============== Add Your Farmer License ===============-->
+        <div id="license" class="section">
+            <div class="container">
+                <h2 class="section__title">Add Your Farmer License</h2>
+                <p class="section__subtitle">A license is required to operate the Stake Code Farmer. This is Step 2.</p>
+                <div class="pricing__grid">
+                    <!-- Weekly License -->
+                    <div class="pricing__card">
+                        <i class='bx bx-calendar-week license-icon'></i>
+                        <h3 class="pricing__plan">Weekly License</h3>
+                        <div class="pricing__price">$10</div>
+                        <a href="https://t.me/hayzpar4?text=I%20would%20like%20to%20order%20the%20Weekly%20License." target="_blank" class="button button--outline">Order Now</a>
+                    </div>
+                    <!-- Monthly License - POPULAR -->
+                    <div class="pricing__card popular">
+                        <div class="popular__tag">Most Popular</div>
+                        <i class='bx bxs-calendar-star license-icon'></i>
+                        <h3 class="pricing__plan">Monthly License</h3>
+                        <div class="pricing__price">$25</div>
+                        <a href="https://t.me/hayzpar4?text=I%20would%20like%20to%20order%20the%20Monthly%20License." target="_blank" class="button button--primary">Order Now</a>
+                    </div>
+                    <!-- Daily License -->
+                    <div class="pricing__card">
+                        <i class='bx bx-sun license-icon'></i>
+                        <h3 class="pricing__plan">Daily License</h3>
+                        <div class="pricing__price">$5</div>
+                        <a href="https://t.me/hayzpar4?text=I%20would%20like%20to%20order%20the%20Daily%20License." target="_blank" class="button button--outline">Order Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--=============== Get Started in 3 Simple Steps ===============-->
+        <div id="start" class="section">
+            <div class="container">
+                <h2 class="section__title">Get Started in 3 Simple Steps</h2>
+                <div class="start__grid">
+                    <div class="start__step">
+                        <div class="start__number">1</div>
+                        <h3 class="start__title">Order Your VPS</h3>
+                        <p class="start__description">Contact us on Telegram to choose your plan. We handle all the technical setup.</p>
+                    </div>
+                    <div class="start__step">
+                        <div class="start__number">2</div>
+                        <h3 class="start__title">Get Your License</h3>
+                        <p class="start__description">We'll guide you through activating your Stake Code Farmer license on the new server.</p>
+                    </div>
+                    <div class="start__step">
+                        <div class="start__number">3</div>
+                        <h3 class="start__title">Start Earning</h3>
+                        <p class="start__description">Sit back and let your bot claim bonuses 24/7 without interruption.</p>
+                    </div>
+                </div>
+                <!-- CTA -->
+                <div class="cta__section">
+                    <div class="cta__container">
+                        <h2 class="cta__title">Ready to Maximize Your Claims?</h2>
+                        <p class="cta__description">Contact us on Telegram now. Your fully automated setup is just a message away.</p>
+                        <a href="https://t.me/hayzpar4" target="_blank" class="button button--primary button--large">Contact @hayzpar4</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!--=============== The Ultimate Advantage (Features) ===============-->
+        <div id="features" class="section">
+            <div class="container">
+                <h2 class="section__title">The Ultimate Advantage</h2>
+                <p class="section__subtitle">Why a dedicated VPS is the best way to run your code farmer.</p>
+                <div class="features__grid">
+                    <!-- Feature Cards -->
+                    <div class="feature__card">
+                        <i class='bx bx-server feature__icon'></i>
+                        <h3 class="feature__title">24/7 Uptime</h3>
+                        <p class="feature__description">Your farmer runs non-stop on our servers. No need to keep your own PC running.</p>
+                    </div>
+                    <div class="feature__card">
+                        <i class='bx bxs-zap feature__icon'></i>
+                        <h3 class="feature__title">Lightning Fast</h3>
+                        <p class="feature__description">With powerful CPUs and SSDs, you claim codes the instant they drop.</p>
+                    </div>
+                    <div class="feature__card">
+                        <i class='bx bx-shield-quarter feature__icon'></i>
+                        <h3 class="feature__title">Secure & Private</h3>
+                        <p class="feature__description">An isolated environment keeps your accounts and activity safe from local network issues.</p>
+                    </div>
+                    <div class="feature__card">
+                        <i class='bx bx-rocket feature__icon'></i>
+                        <h3 class="feature__title">Easy Setup</h3>
+                        <p class="feature__description">We handle the complete setup for you. Your farmer is live in 3-12 hours, guaranteed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <div class="container footer__container">
+            <p>&copy; 2025 Stake Code Farmer. All Rights Reserved.</p>
+            <p class="footer__note">Disclaimer: Please use this service responsibly. We are not affiliated with Stake.com.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            /*=============== SHOW/HIDE MOBILE MENU ===============*/
+            const navMenu = document.getElementById('nav-menu');
+            const navToggle = document.getElementById('nav-toggle');
+            const navLinks = document.querySelectorAll('.nav__link');
+
+            if (navToggle) {
+                navToggle.addEventListener('click', () => {
+                    navMenu.classList.toggle('show-menu');
+                });
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('show-menu');
+                });
+            });
+
+            /*=============== DARK/LIGHT THEME ===============*/
+            const themeButton = document.getElementById('theme-button');
+            const htmlElement = document.documentElement;
+            const lightIconClass = 'bx-sun';
+            const darkIconClass = 'bx-moon';
+            
+            const savedTheme = localStorage.getItem('selected-theme');
+            
+            // Set theme on initial load, defaulting to dark if nothing is saved
+            htmlElement.setAttribute('data-theme', savedTheme || 'dark');
+
+
+            const getCurrentTheme = () => htmlElement.getAttribute('data-theme');
+
+            const updateThemeIcon = () => {
+                if (getCurrentTheme() === 'dark') {
+                    themeButton.classList.remove(lightIconClass);
+                    themeButton.classList.add(darkIconClass);
+                } else {
+                    themeButton.classList.remove(darkIconClass);
+                    themeButton.classList.add(lightIconClass);
+                }
+            };
+            
+            updateThemeIcon(); // Set the icon on initial load
+
+            themeButton.addEventListener('click', () => {
+                const newTheme = getCurrentTheme() === 'light' ? 'dark' : 'light';
+                htmlElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('selected-theme', newTheme);
+                updateThemeIcon();
+
+                // Toggle Matrix effect
+                if (newTheme === 'dark') {
+                    startMatrix();
+                } else {
+                    stopMatrix();
+                }
+            });
+
+            /*=============== SCROLLSPY & URL HASH UPDATE ===============*/
+            const sections = document.querySelectorAll('div[id]');
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        
+                        if(history.pushState) {
+                            history.pushState(null, null, `#${id}`);
+                        } else {
+                            location.hash = `#${id}`;
+                        }
+
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            /*=============== VPS CARD SELECTION LOGIC ===============*/
+            const vpsCards = document.querySelectorAll('.pricing__card[data-plan-name]');
+            vpsCards.forEach(card => {
+                const orderButton = card.querySelector('.vps-order-button');
+                if (!orderButton) return;
+
+                const updateOrderLink = () => {
+                    const planName = card.dataset.planName;
+                    const cpu = card.dataset.cpu;
+                    const ram = card.dataset.ram;
+                    const ssd = card.dataset.ssd;
+
+                    const selectedOsEl = card.querySelector('.os-selector .selected');
+                    const selectedRegionEl = card.querySelector('.region-selector .selected');
+                    const selectedOs = selectedOsEl ? selectedOsEl.dataset.os : 'Not yet selected';
+                    const selectedRegion = selectedRegionEl ? selectedRegionEl.dataset.region : 'Not yet selected';
+
+                    let message = `I would like to order the ${planName} VPS.\n\n`;
+                    message += `*Specs:*\n- CPU: ${cpu}\n- RAM: ${ram}\n- SSD: ${ssd}\n\n`;
+                    message += `*My Selections:*\n- OS: ${selectedOs}\n- Region: ${selectedRegion}`;
+
+                    orderButton.href = `https://t.me/hayzpar4?text=${encodeURIComponent(message)}`;
+                };
+
+                const createSelectionListener = (selectorClass) => {
+                    card.querySelectorAll(`.${selectorClass} .selection-item`).forEach(item => {
+                        item.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const selectorList = item.parentElement;
+                            const currentlySelected = selectorList.querySelector('.selected');
+
+                            if (item === currentlySelected) {
+                                item.classList.remove('selected');
+                            } else {
+                                if (currentlySelected) {
+                                    currentlySelected.classList.remove('selected');
+                                }
+                                item.classList.add('selected');
+                            }
+                            updateOrderLink();
+                        });
+                    });
+                };
+
+                createSelectionListener('os-selector');
+                createSelectionListener('region-selector');
+                updateOrderLink();
+            });
+
+            /*=============== MATRIX EFFECT ===============*/
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+            let matrixInterval;
+
+            const setupMatrix = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+
+            const characters = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const charactersArray = characters.split('');
+            const fontSize = 16;
+            let columns = Math.floor(window.innerWidth / fontSize);
+            let drops = [];
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+
+            const drawMatrix = () => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+                ctx.font = fontSize + 'px arial';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = charactersArray[Math.floor(Math.random() * charactersArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            };
+            
+            const startMatrix = () => {
+                if (matrixInterval) return;
+                setupMatrix();
+                columns = Math.floor(window.innerWidth / fontSize);
+                drops = [];
+                for (let x = 0; x < columns; x++) {
+                    drops[x] = 1;
+                }
+                matrixInterval = setInterval(drawMatrix, 33);
+            };
+
+            const stopMatrix = () => {
+                if (matrixInterval) clearInterval(matrixInterval);
+                matrixInterval = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            };
+
+            window.addEventListener('resize', () => {
+                if (getCurrentTheme() === 'dark') {
+                    stopMatrix();
+                    startMatrix();
+                }
+            });
+            
+            // Initial check
+            if (getCurrentTheme() === 'dark') {
+                startMatrix();
+            }
+        });
+    </script>
+</body>
+</html>
